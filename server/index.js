@@ -24,6 +24,7 @@ app.get('/', (req,res) => {
          res.send('Jibran is here')
 });
 
+//Authentication & Login - Database : Users
 app.post('/api/signup', function (req, res) {
     res.header('Access-Control-Allow-Origin', "*");
     var userData = {
@@ -44,6 +45,80 @@ app.post('/api/signup', function (req, res) {
         }
     })
 })
+
+//Login API using database USERS
+app.post('/api/login', function (req, res) {
+    Authentication.findOne({ email: req.body.email }, function (err, user) {
+        if (err) {
+            console.log("email err", err)
+            return res.status(500).send(err)
+            // return err
+        }
+        if (!user) {
+            console.log("email 404 err")
+            return res.status(404).send()
+        }
+
+        if(user.password !== req.body.password){
+          return res.status(404).send('Password invalid');
+        }
+
+        console.log("You are Successfully Logged In: Welcome ", user.username)
+                return res.status(200).send(user.username);
+  
+    });
+});
+//Read All User
+app.get('/api/getall', function(req, res) {
+    Authentication.find({}, function(err, users) {
+      var userMap = {};
+  
+      users.forEach(function(user) {
+        userMap[user._id] = user;
+      });
+  
+      res.send(userMap); 
+      console.log("These are the lists of all users in your database ", userMap) 
+    });
+});
+
+//Read Single User by Username
+app.get('/api/getuser', function (req, res) {
+      
+      Authentication.findOne({ username: req.query.username },function (err, user) {
+          if (err) {
+              console.log("username err", err)
+              return res.status(500).send(err)
+              // return err
+          }
+          if(user.username !== req.query.username){
+              return res.status(404).send('username invalid');
+            }
+            console.log("You are Successfully Searched: Welcome ", user.username)
+            console.log("User_id: ", user._id)
+            console.log("User Password: ", user.password)
+            console.log("You created account on: ", user.created_date)
+                return res.status(200).send(user);
+    });
+})
+//
+app.put('/api/update/:_id', function (req, res) {
+      
+      Authentication.findByIdAndUpdate(req.params._id, req.body, {new: true}, function (err, user) {
+          if (err) return res.status(500).send("There was a problem updating the user.");
+          res.status(200).send(user);
+    });
+});
+  
+app.delete('/api/delete/:id', function (req, res) {
+      Authentication.findByIdAndRemove(req.params.id, function (err, user) {
+          if (err) return res.status(500).send("There was a problem deleting the user.");
+          res.status(200).send("User "+ user.username +" was deleted.");
+    });
+});
+  
+//Doctor Portal having Create, Read, Update, Delete
+//Create Doctor
 app.post('/api/drsignup', function (req, res) {
     res.header('Access-Control-Allow-Origin', "*");
     var DrUserData = {
@@ -68,7 +143,7 @@ app.post('/api/drsignup', function (req, res) {
         }
     })
 })
-
+//Update Doctor
 app.put('/api/drupdate/:_id', function (req, res) {
     
     DoctorProfile.findByIdAndUpdate(req.params._id, req.body, {new: true}, function (err, user) {
@@ -76,7 +151,7 @@ app.put('/api/drupdate/:_id', function (req, res) {
         res.status(200).send(user);
     });
 });
-
+//Read All Doctors in database DoctorProfile
 app.get('/api/getalldr', function(req, res) {
     DoctorProfile.find({}, function(err, users) {
       var userMap = {};
@@ -90,7 +165,8 @@ app.get('/api/getalldr', function(req, res) {
     });
   });
 
-  app.get('/api/getuserdr', function (req, res) {
+//Read Single Doctor by ID
+app.get('/api/getuserdr', function (req, res) {
     
     DoctorProfile.findOne({ username: req.query.username },function (err, user) {
         if (err) {
@@ -108,80 +184,13 @@ app.get('/api/getalldr', function(req, res) {
                   return res.status(200).send(user);
       });
 })
-
+//Delete Single Doctor by ID
 app.delete('/api/deletedr/:id', function (req, res) {
     DoctorProfile.findByIdAndRemove(req.params.id, function (err, user) {
         if (err) return res.status(500).send("There was a problem deleting the user.");
         res.status(200).send("User "+ user.username +" was deleted.");
     });
 });
-
-app.post('/api/login', function (req, res) {
-    Authentication.findOne({ email: req.body.email }, function (err, user) {
-        if (err) {
-            console.log("email err", err)
-            return res.status(500).send(err)
-            // return err
-        }
-        if (!user) {
-            console.log("email 404 err")
-            return res.status(404).send()
-        }
-
-        if(user.password !== req.body.password){
-          return res.status(404).send('Password invalid');
-        }
-
-        console.log("You are Successfully Logged In: Welcome ", user.username)
-                return res.status(200).send(user.username);
-  
-    });
-});
-app.get('/api/getall', function(req, res) {
-  Authentication.find({}, function(err, users) {
-    var userMap = {};
-
-    users.forEach(function(user) {
-      userMap[user._id] = user;
-    });
-
-    res.send(userMap); 
-    console.log("These are the lists of all users in your database ", userMap) 
-  });
-});
-app.get('/api/getuser', function (req, res) {
-    
-    Authentication.findOne({ username: req.query.username },function (err, user) {
-        if (err) {
-            console.log("username err", err)
-            return res.status(500).send(err)
-            // return err
-        }
-        if(user.username !== req.query.username){
-            return res.status(404).send('username invalid');
-          }
-          console.log("You are Successfully Searched: Welcome ", user.username)
-          console.log("User_id: ", user._id)
-          console.log("User Password: ", user.password)
-          console.log("You created account on: ", user.created_date)
-                  return res.status(200).send(user);
-      });
-})
-app.put('/api/update/:_id', function (req, res) {
-    
-    Authentication.findByIdAndUpdate(req.params._id, req.body, {new: true}, function (err, user) {
-        if (err) return res.status(500).send("There was a problem updating the user.");
-        res.status(200).send(user);
-    });
-});
-
-app.delete('/api/delete/:id', function (req, res) {
-    Authentication.findByIdAndRemove(req.params.id, function (err, user) {
-        if (err) return res.status(500).send("There was a problem deleting the user.");
-        res.status(200).send("User "+ user.username +" was deleted.");
-    });
-});
-
  app.post('/api/multiply', function (req, res) {
     res.header('Access-Control-Allow-Origin', "*");
     num1= req.body.num1
